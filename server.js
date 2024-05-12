@@ -55,13 +55,15 @@ app.get("/users/dashboard", checkNotAuthenticated, (req, res) => {
 });
 
 app.get("/users/logout", (req, res) => {
-  req.logout();
-  res.render("index", { message: "You have logged out successfully" });
+  req.logout(function(err) {
+    if (err) { return next(err); }
+    res.render("index", { message: "You have logged out successfully" });
+  });
 });
 
 app.post("/users/register", async (req, res) => {
   let { name, email, password, password2 } = req.body;
-
+  const date= new Date();
   let errors = [];
 
   console.log({
@@ -75,8 +77,8 @@ app.post("/users/register", async (req, res) => {
     errors.push({ message: "Please enter all fields" });
   }
 
-  if (password.length < 6) {
-    errors.push({ message: "Password must be a least 6 characters long" });
+  if (password.length < 8) {
+    errors.push({ message: "Password must be a least 8 characters long" });
   }
 
   if (password !== password2) {
@@ -105,10 +107,10 @@ app.post("/users/register", async (req, res) => {
           });
         } else {
           pool.query(
-            `INSERT INTO users (name, email, password)
-                VALUES ($1, $2, $3)
+            `INSERT INTO users (name, email, password, registration_date)
+                VALUES ($1, $2, $3, $4)
                 RETURNING id, password`,
-            [name, email, hashedPassword],
+            [name, email, hashedPassword, date],
             (err, results) => {
               if (err) {
                 throw err;
